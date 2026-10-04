@@ -11,7 +11,7 @@ Spec           superwork.world/v1
 Entities       4
 States         8
 Transitions    7
-Constraints    8
+Constraints    9
 
 Schema         PASS
 References     PASS

@@ -79,6 +79,11 @@ entities:
       novelty: string                  # high | medium | low — 고객이 이미 알고 있는 뻔한 얘기인가
       materiality: string              # high | medium | low
       decision_relevance: string        # high | low
+      advances_google_objective: string # yes | no | not_applicable — 이 insight가 Google의
+                                         # objective(광고 투자 확대 등)를 적극적으로 해치지 않는가.
+                                         # "안 도와도 되지만, 적극적으로 해쳐서는 안 된다" — yes/
+                                         # not_applicable은 허용, no만 차단 (순수 가격·운영 결정처럼
+                                         # Google과 무관한 질문까지 억지로 yes를 요구하지 않기 위함).
       status: state
     owned_state: true                  # 유일한 owned_state Entity
 
@@ -135,7 +140,7 @@ transitions:
     from: supported
     to: insight_ready
     principal_role: analyst
-    guards: [C5_hyp_novelty, C6_hyp_materiality, C7_hyp_decision_relevance]
+    guards: [C5_hyp_novelty, C6_hyp_materiality, C7_hyp_decision_relevance, C9_hyp_not_against_google]
 
   publish:
     from: insight_ready
@@ -172,6 +177,10 @@ constraints:
   C7_hyp_decision_relevance:
     expr: hypothesis.decision_relevance == "high"
     message: Insight must change a decision, not just restate a fact.
+
+  C9_hyp_not_against_google:
+    expr: hypothesis.advances_google_objective in ["yes", "not_applicable"]
+    message: An insight that works against Google's own objective cannot be promoted — advancing the client's win alone is not enough.
 
   C8_hyp_no_self_publish:
     expr: principal.id != hypothesis.proposed_by

@@ -1,0 +1,26 @@
+# 공격 시나리오 (BREAK, 메인) — 클라이언트에게는 유리하지만 Google의 objective에는 반하는
+# 주장이 Guard를 다 통과해버리는지 시험. 실제 클라이언트 케이스(세일즈 요청 — 효율화 기조로
+# 전환하며 특정 채널 예산을 줄이자는 내러티브, 익명화)를 대입해서 찾음.
+# 판정은 예측(PREDICTION)입니다. 리뷰에서 강사가 실제 Runtime 결과와 비교합니다.
+scenario:
+  name: insight-against-google-objective-should-not-promote
+  kind: adversarial
+  record: H-004                     # seed.yaml — status: supported, advances_google_objective: no
+  protects: >
+    이 업무는 광고주의 win뿐 아니라 Google의 win도 함께 고려해야 한다. 클라이언트에게는
+    유리해도 Google 광고 투자를 줄이자는 결론으로 이어지는 주장은 insight로 승격되면 안 된다.
+  steps:
+    - input: >
+        H-004('특정 채널 예산을 줄이는 것이 클라이언트의 ROAS를 추가로 개선한다',
+        advances_google_objective=no)를 insight로 승격 시도한다.
+      as: analyst1
+      transition: promote_insight
+      expect: DENY                  # 예측 — 틀려도 괜찮음
+      because: >
+        State: H-004 is supported = promote_insight.from → 통과.
+        Role: analyst1 has analyst = promote_insight.principal_role → 통과.
+        Guards: novelty(high)/materiality(high)/decision_relevance(high) 전부 통과.
+        Guard C9_hyp_not_against_google: advances_google_objective(no) in [yes, not_applicable]
+        → false → DENY.
+        즉 "클라이언트에게 사실이고 의미 있다"는 것만으로는 부족하고, Google의 objective를
+        적극적으로 해치지 않아야 한다는 게 이 Guard가 추가로 막는 지점이다.

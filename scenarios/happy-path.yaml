@@ -42,6 +42,7 @@ scenario:
         Guards: novelty(high) in [high,medium] → true.
         materiality(high) in [high,medium] → true.
         decision_relevance(high) == high → true.
+        C9_hyp_not_against_google: advances_google_objective(yes) in [yes, not_applicable] → true.
 
     - input: "lead1이 H-001을 최종 발행한다."
       as: lead1

@@ -8,15 +8,19 @@
    그래서 Hypothesis 하나의 생애주기(`candidate→...→published`)로 합쳤다.
 
 2. **World 없이 에이전트에게 이 업무를 맡겼다면 무엇이 잘못될 수 있었을까요?**
-   증거 없는 가설을 그대로 SUPPORTED로 처리하거나, 참이지만 뻔한 사실을 그대로 고객에게
-   Insight로 전달하거나, 가설을 제안한 사람이 스스로 그걸 발행까지 승인해버리는 일이
-   매번 다르게(에이전트의 그날 판단에 따라) 일어날 수 있었을 것이다.
+      증거 없는 가설을 그대로 SUPPORTED로 처리하거나, 참이지만 뻔한 사실을 그대로 고객에게
+   Insight로 전달하거나, Novelty가 없는 가설을 내게 전달한다든가 하는 경우가 일어날 수 있었을 것.
 
 3. **BREAK에서 무엇을 발견했나요? 그 빈틈은 프롬프트를 고쳐서도 막을 수 있었을까요? 왜 World 규칙으로 막는 것이 다른가요?**
-   "혼자 일하는 구조라 analyst와 lead 역할을 한 사람이 겸해야 하는데, `publish`를 역할(role)
-   체크만으로 막으면 셀프승인이 그대로 뚫린다"는 빈틈을 발견했다. 프롬프트로 "본인 가설은
-   스스로 승인하지 마세요"라고 적어도 지켜질 거라는 보장이 없지만, `principal.id !=
-   hypothesis.proposed_by` Guard는 역할이 어떻게 조합되든 기계적으로 항상 같게 적용된다.
+   처음엔 "본인이 제안한 가설을 본인이 발행까지 승인하는" 셀프승인 빈틈을 찾았는데, 혼자
+   일하는 구조라 실질적으로는 덜 중요한 문제였다. 그래서 실제 클라이언트 케이스를 대입해
+   다시 찾아보니 더 본질적인 빈틈이 나왔다 — novelty/materiality/decision_relevance를 다
+   통과해도 "이 insight가 Google의 objective에는 반하지 않는가"는 전혀 체크하지 않고 있었다.
+   예를 들어 "특정 채널 예산을 줄이면 클라이언트의 ROAS가 개선된다"는 가설은 지금 Guard를
+   다 통과하지만, 결론이 Google 광고비 축소라서 애초에 이 업무가 지켜야 하는 "광고주 win +
+   Google win" 원칙과 반대다. 프롬프트로 "Google에도 도움이 되는지 확인하세요"라고 적어도
+   매번 챙겨질 거라는 보장이 없지만, `advances_google_objective in [yes, not_applicable]`
+   Guard는 기계적으로 항상 같게 적용된다.
 
 4. **validate가 통과했는데도 설계가 틀릴 수 있다는 것을 어떻게 경험했나요?**
    `publish`의 guard를 빼버린 BEFORE 버전도 `npm run validate`가 그대로 "통과"했다. 스키마가
@@ -25,6 +29,8 @@
 
 5. **이 World를 한 단계 더 발전시킨다면 무엇을 추가하겠나요?**
    지금은 `builds_on`/`primary_evidence`가 Hypothesis 1개만 가리킬 수 있는데, 실제로는
-   3~4개의 Hypothesis·Observation을 종합하는 경우가 많아서 이 관계를 제대로 구조화하고 싶다.
-   또한 "client_objective/google_objective 중 최소 하나에 영향을 줘야 insight로 qualify된다"는
-   Guard를 추가해서, 광고주와 Google 양쪽의 win을 같이 고려하는 실제 업무 특성을 반영하고 싶다.
+   3~4개의 Hypothesis·Observation을 종합하는 경우가 많아서 이 관계를 제대로 구조화(배열
+   참조 또는 별도 관계 구조)하고 싶다. 또한 `advances_google_objective`를 포함한 모든
+   Qualification 속성이 지금은 분석가 본인이 스스로 적어넣는 self-assertion이라, 그 판단이
+   실제로 맞는지는 World가 검증하지 못한다 — 과거 발행된 Insight들과 비교하거나 재검토
+   이력을 남기는 식으로 이걸 보강할 수 있는지 다음에 고민해보고 싶다.

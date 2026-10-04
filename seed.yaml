@@ -6,6 +6,8 @@
 # 아님). 참고용으로 이 seed가 가리키는 Observation id가 무엇을 뜻하는지만 적어둡니다.
 #   O-001 = "고가치 신규고객 90일 전환율 -35%, 2026 Q3, Client CRM"
 #   O-002 = "구매자 수 YoY -15%, 2026 Q3, Client BI"
+#   O-003 = "채널별 ROAS 비교 — 특정 채널 축소 시 ROAS +8%p, 2026 Q3, Client BI"
+#   O-004 = "런치 할인 프로모션 참여 고객의 margin 기여도, 2026 Q3, Client POS"
 records:
   - type: Hypothesis
     id: H-001
@@ -23,6 +25,7 @@ records:
       novelty: "high"
       materiality: "high"
       decision_relevance: "high"
+      advances_google_objective: "yes"   # 해결책이 결국 정교한 타겟팅 투자 확대로 이어짐
 
   - type: Hypothesis
     id: H-002
@@ -40,6 +43,7 @@ records:
       novelty: "low"
       materiality: "high"
       decision_relevance: "high"
+      advances_google_objective: "not_applicable"  # 뻔한 서술이라 Google 투자와 직접 관련 없음
 
   - type: Hypothesis
     id: H-003
@@ -57,3 +61,42 @@ records:
       novelty: "high"
       materiality: "high"
       decision_relevance: "high"
+      advances_google_objective: "yes"
+
+  - type: Hypothesis
+    id: H-004
+    status: supported
+    attributes:
+      task: T-001
+      builds_on: ""
+      statement: "특정 채널 예산을 줄이는 것이 클라이언트의 ROAS를 추가로 개선한다"
+      proposed_by: analyst1
+      relevant: "yes"
+      testable: "yes"
+      decision_value: "yes"
+      primary_evidence: O-003
+      evidence_count: 2
+      novelty: "high"
+      materiality: "high"
+      decision_relevance: "high"
+      advances_google_objective: "no"   # 클라이언트의 ROAS는 개선되지만, Google 광고비를
+                                         # 줄이자는 결론이라 Google의 objective에는 반함
+
+  - type: Hypothesis
+    id: H-005
+    status: supported
+    attributes:
+      task: T-002
+      builds_on: ""
+      statement: "런치 할인 프로모션 참여 고객군의 margin 기여도가 평일에는 양이지만 주말에는 음이다"
+      proposed_by: analyst1
+      relevant: "yes"
+      testable: "yes"
+      decision_value: "yes"
+      primary_evidence: O-004
+      evidence_count: 2
+      novelty: "high"
+      materiality: "high"
+      decision_relevance: "high"
+      advances_google_objective: "not_applicable"  # 순수 가격/운영 결정이라 Google 광고 투자와 무관
+                                                     # — 도움도 방해도 안 되므로 차단 대상이 아님

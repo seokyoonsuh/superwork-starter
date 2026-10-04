@@ -1,0 +1,25 @@
+# 정상 시나리오 (RUN, 보조) — C9_hyp_not_against_google이 "Google과 무관한" 케이스까지
+# 과도하게 막지는 않는지 확인. 성격이 다른 실제 케이스(순수 가격/운영 의사결정 — 프로모션
+# 유지 여부, 익명화)를 대입해서 테스트함.
+# 판정은 예측(PREDICTION)입니다. 리뷰에서 강사가 실제 Runtime 결과와 비교합니다.
+scenario:
+  name: google-irrelevant-insight-should-still-be-allowed
+  kind: happy-path
+  record: H-005                     # seed.yaml — status: supported, advances_google_objective: not_applicable
+  steps:
+    - input: >
+        H-005('런치 할인 프로모션 참여 고객군의 margin 기여도가 평일엔 양, 주말엔 음이다',
+        advances_google_objective=not_applicable — 순수 가격/운영 결정이라 Google 광고
+        투자와 무관)를 insight로 승격 시도한다.
+      as: analyst1
+      transition: promote_insight
+      expect: ALLOW
+      because: >
+        State: H-005 is supported = promote_insight.from → 통과.
+        Role: analyst1 has analyst = promote_insight.principal_role → 통과.
+        Guards: novelty(high)/materiality(high)/decision_relevance(high) 전부 통과.
+        Guard C9_hyp_not_against_google: advances_google_objective(not_applicable)
+        in [yes, not_applicable] → true → 통과.
+        만약 C9를 "yes만 허용"으로 좁게 만들었다면, 이 케이스는 Google과 무관하다는
+        이유만으로 부당하게 막혔을 것 — Guard가 "안 도와도 되지만 적극적으로 해치지만
+        말라"로 설계돼서 이런 과잉 차단을 피한다.

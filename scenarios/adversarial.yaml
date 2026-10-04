@@ -16,4 +16,5 @@ scenario:
         State: H-002 is supported = promote_insight.from → 통과.
         Role: analyst1 has analyst = promote_insight.principal_role → 통과.
         Guard C5_hyp_novelty: novelty(low) in [high, medium] → false → DENY.
-        (materiality/decision_relevance는 충족하지만, 하나라도 실패하면 DENY.)
+        (materiality/decision_relevance/C9_hyp_not_against_google(not_applicable)는 충족하지만,
+        하나라도 실패하면 DENY.)
