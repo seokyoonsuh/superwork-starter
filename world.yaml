@@ -1,63 +1,187 @@
 # ─────────────────────────────────────────────
-#  Your Superwork World
-#  이 파일이 여러분의 세계 전체입니다. 예시(구매 요청)를 여러분의 업무로 바꾸세요.
-#  결정의 이유는 assignment/ 에 기록하고,
-#  바꿀 때마다 반드시:  npm run validate
-#  이 파일은 저장소 루트에 두세요 (리뷰 Import 규약).
+#  Business Insight Discovery — World
+#
+#  Insight Specialist가 광고주/세일즈 요청(Task)을 받아 데이터를 보다가
+#  Observation을 근거로 Hypothesis를 제안하고 검증한다.
+#  Problem 발견과 Insight 승격은 별개의 Entity가 아니라, 하나의 Hypothesis가
+#  이 생애주기 위에서 얼마나 멀리 올라가는지의 차이로 모델링한다:
+#    - 검증만 되고 멈추면(SUPPORTED) → 다른 가설의 디딤돌(참고 자료)
+#    - 더 나아가 published까지 가면 → 그게 바로 "Insight"
+#  (이 결정의 이유는 assignment/modeling-decisions.md 참고)
+#
+#  owned_state(실제 상태기계)는 Hypothesis 하나로 좁혔다 — 이 DSL v1의
+#  states/transitions가 Entity별로 scoping되지 않는(전역 state 이름 집합을
+#  쓰는) 구조라서, 여러 Entity에 상태기계를 분산시키는 건 검증되지 않은
+#  리스크로 보고 피했다 (템플릿 주석: "상태기계를 갖는 엔티티는 하나로
+#  시작하세요").
+#
+#  바꿀 때마다 반드시: npm run validate
 # ─────────────────────────────────────────────
 
 world:
-  id: my-world                     # 여러분의 World id (예: procurement-approval)
+  id: business-insight-discovery
   version: 0.1.0
-  spec: superwork.world/v1         # 언어 버전 — 수정하지 마세요
+  spec: superwork.world/v1
   mission: >
-    TODO: 이 세계가 완수하려는 일을 한 문장으로.
-    (예: Process purchase requests safely from submission to delivery.)
+    Qualify candidate hypotheses with real evidence before testing them,
+    confirm or reject them against observed data, and allow only the
+    validated findings that are non-obvious and independently reviewed
+    to be published as client-facing insight.
 
-# E — Entities: 무엇이 존재하고 추적되는가? (assignment/entity-decisions.md)
+# E — Entities
 entities:
-  # 예시 — 여러분의 도메인으로 교체하세요
-  Request:
+  Project:
     attributes:
       id: string
-      amount: money
-      requester: ref(Employee)
+      client: string
+      period: string
+      requester_side: string        # client | sales
+      client_objective: string
+      google_objective: string
+    # owned_state 없음 — Project는 컨텍스트/스코프 역할만 한다.
+
+  Task:
+    attributes:
+      id: string
+      project: ref(Project)
+      ask_text: string               # 광고주/세일즈가 실제로 요청한 문장
+      ask_type: string                # diagnosis_given | opportunity_sizing | strategy | open_exploration
+
+  Observation:
+    attributes:
+      id: string
+      metric: string
+      value: string
+      period: string                  # 분석 윈도우는 여기 자유 서술 (예: "2026 Q3 YoY") — 별도 taxonomy 없음
+      source: string                  # Source of Truth
+      cited_by: string                 # 어떤 Hypothesis가 이걸 근거로 썼는지 (서술용, 비검증)
+    # owned_state 없음 — "인용될 때만" 존재하는 참조 Entity. Hypothesis의 Attribute(텍스트)로
+    # 접지 않고 별도 Entity로 둔 이유:
+    #  1) 여러 Hypothesis가 같은 사실(id)을 중복 타이핑 없이 공유 — 수치가 정정되면 한 곳만 고치면 됨
+    #  2) Source of Truth(어느 출처·어느 기간에서 왔는지) 추적 가능 — 텍스트로 묻으면 못 물어봄
+    #  3) 관찰된 사실(fact)과 해석/주장(claim)을 구조적으로 분리 — Hypothesis와 뒤섞이지 않게
+
+  Hypothesis:
+    attributes:
+      id: string
+      task: ref(Task)
+      builds_on: ref(Hypothesis)       # optional — 다른 (보통 SUPPORTED/published) Hypothesis를
+                                        # 디딤돌/핵심문제 프레임으로 썼는지. 서술용, 비검증.
+      statement: string
+      proposed_by: string              # principals 목록의 id
+      relevant: string                 # yes | no — 현재 Task/문제와 직접 관련 있는가
+      testable: string                 # yes | no — 실제 데이터로 검증 가능한가
+      decision_value: string           # yes | no — 맞든 틀리든 의사결정에 의미가 있는가
+      primary_evidence: ref(Observation) # 이 Hypothesis가 근거로 삼는 Observation. 서술용, 비검증이지만
+                                          # 여러 Hypothesis가 같은 Observation id를 가리킬 수 있어
+                                          # 중복 기록을 막고 출처(source) 추적을 가능하게 한다.
+      evidence_count: number           # 인용된 Observation 개수 (Guard가 실제로 검사하는 값)
+      novelty: string                  # high | medium | low — 고객이 이미 알고 있는 뻔한 얘기인가
+      materiality: string              # high | medium | low
+      decision_relevance: string        # high | low
       status: state
-    owned_state: true              # 상태기계를 갖는 엔티티는 하나로 시작하세요
-  Employee:
-    attributes:
-      id: string
-      name: string
-      manager: ref(Employee)
+    owned_state: true                  # 유일한 owned_state Entity
 
-# S — States: 주인공 Entity가 흐름 속 어디에 있는가?
+# S — States
 states:
-  Request:
-    - draft
-    - submitted
-    # TODO: 여러분의 상태들
+  Hypothesis:
+    - candidate
+    - qualified
+    - investigating
+    - supported
+    - rejected
+    - inconclusive
+    - insight_ready
+    - published
 
-terminal_states: []                # 최종 사실 (예: [closed, rejected])
+terminal_states:
+  - rejected
+  - inconclusive
+  - published
 
-# T — Transitions: 무엇이 상태를 바꾸고, 누가 할 수 있는가?
+# T — Transitions
 transitions:
-  submit:
-    from: draft
-    to: submitted
-    principal_role: employee
-    guards: [C1_requester_only]
+  qualify:
+    from: candidate
+    to: qualified
+    principal_role: analyst
+    guards: [C1_hyp_relevant, C2_hyp_testable, C3_hyp_decision_value]
 
-# C — Constraints: 무엇이 절대 허용되면 안 되는가?
+  investigate:
+    from: qualified
+    to: investigating
+    principal_role: analyst
+    guards: []
+
+  support:
+    from: investigating
+    to: supported
+    principal_role: analyst
+    guards: [C4_hyp_has_evidence]
+
+  reject:
+    from: investigating
+    to: rejected
+    principal_role: analyst
+    guards: [C4_hyp_has_evidence]
+
+  mark_inconclusive:
+    from: investigating
+    to: inconclusive
+    principal_role: analyst
+    guards: []
+
+  promote_insight:
+    from: supported
+    to: insight_ready
+    principal_role: analyst
+    guards: [C5_hyp_novelty, C6_hyp_materiality, C7_hyp_decision_relevance]
+
+  publish:
+    from: insight_ready
+    to: published
+    principal_role: lead
+    guards: [C8_hyp_no_self_publish]
+
+# C — Constraints
 constraints:
-  C1_requester_only:
-    expr: principal.id == request.requester
-    message: Only the requester can submit.
+  C1_hyp_relevant:
+    expr: hypothesis.relevant == "yes"
+    message: Hypothesis must be directly relevant to the current Task/problem.
 
-# 행위자 — 시나리오의 `as`는 여기의 id를 씁니다
+  C2_hyp_testable:
+    expr: hypothesis.testable == "yes"
+    message: Hypothesis must be testable against available data.
+
+  C3_hyp_decision_value:
+    expr: hypothesis.decision_value == "yes"
+    message: Hypothesis must matter to a decision regardless of outcome.
+
+  C4_hyp_has_evidence:
+    expr: hypothesis.evidence_count >= 1
+    message: At least one cited Observation is required before a verdict.
+
+  C5_hyp_novelty:
+    expr: hypothesis.novelty in ["high", "medium"]
+    message: Insight must be non-obvious (novelty high or medium) to be delivered.
+
+  C6_hyp_materiality:
+    expr: hypothesis.materiality in ["high", "medium"]
+    message: Insight must be material enough to matter at the C-level.
+
+  C7_hyp_decision_relevance:
+    expr: hypothesis.decision_relevance == "high"
+    message: Insight must change a decision, not just restate a fact.
+
+  C8_hyp_no_self_publish:
+    expr: principal.id != hypothesis.proposed_by
+    message: The author cannot publish their own insight; a lead must review it.
+
+# 행위자
 principals:
-  - id: alex
-    name: Alex
-    roles: [employee]
-  - id: blake
-    name: Blake
-    roles: [employee]
+  - id: analyst1
+    name: Analyst
+    roles: [analyst, lead]          # 혼자 일하는 구조라 실무에서는 같은 사람이 두 역할을 겸함
+  - id: lead1
+    name: Lead
+    roles: [lead]                   # 별도 리뷰어를 쓸 수 있을 때를 위한 보조 principal

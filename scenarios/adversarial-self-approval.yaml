@@ -1,0 +1,24 @@
+# 공격 시나리오 (BREAK, 보조) — 제안자 본인이 자기 가설을 셀프승인/발행하는 걸 막는지 시험.
+# 필수 제출 항목은 adversarial.yaml 하나지만, 이번 과제에서 "뻔함 차단"과 "셀프승인 차단"을
+# 둘 다 다루기로 했어서 보조로 추가함.
+# 판정은 예측(PREDICTION)입니다. 리뷰에서 강사가 실제 Runtime 결과와 비교합니다.
+scenario:
+  name: proposer-cannot-self-publish
+  kind: adversarial
+  record: H-003                     # seed.yaml — status: insight_ready, proposed_by: analyst1
+  protects: >
+    Hypothesis를 제안한 사람이 스스로 그 Hypothesis의 발행(publish)까지 승인하면 안 된다
+    (확증편향 방지 — 반드시 제안자가 아닌 다른 사람의 검토를 거쳐야 함).
+  steps:
+    - input: "H-003을 제안한 analyst1이 본인이 직접 publish를 시도한다."
+      as: analyst1
+      transition: publish
+      expect: DENY                  # 예측 — 틀려도 괜찮음
+      because: >
+        State: H-003 is insight_ready = publish.from → 통과.
+        Role: analyst1의 roles는 [analyst, lead] (혼자 일하는 구조라 두 역할을 겸함) →
+        lead를 갖고 있어서 publish.principal_role 체크는 **통과해버림**.
+        Guard C8_hyp_no_self_publish: principal.id(analyst1) != proposed_by(analyst1) →
+        false → DENY.
+        즉 이 시나리오에서 셀프승인을 막는 건 role 분리가 아니라 **오직 C8 Guard**다 —
+        role만 믿었다면 analyst1은 자기 가설을 그대로 발행할 수 있었을 것.

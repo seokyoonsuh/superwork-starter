@@ -1,48 +1,28 @@
 # Entity 결정 — 가장 중요한 과제
 
-업무 설명에 등장하는 **후보 개념**을 모두 적고, 하나씩 **최종 분류**와 **이유**를 결정합니다.
-AI가 제안할 수는 있지만, 분류를 결정하고 이유를 쓰는 사람은 여러분입니다.
-
-## 분류
-
-| 분류 | 뜻 | 예 |
-|---|---|---|
-| **Entity** | 고유한 정체성을 갖고 시간이 지나도 추적되는 것 | 계약, 주문, 학생 |
-| **Role** | 행동하는 주체의 역할 | 요청자, 승인자, 트레이더 |
-| **Attribute** | 어떤 Entity에 기록되는 값 | 금액, 마감일, 수량 |
-| **State** | Entity가 흐름 속 어디에 있는가 | 제출됨, 승인됨, 체결됨 |
-| **Transition** | 상태를 바꾸는 허용된 행동 | 제출, 승인, 서명 |
-| **Constraint** | 행동을 허용하거나 막는 규칙 | 셀프 승인 금지, 금액 한도 |
-| **Event / Effect** | 일어난 일, 또는 World 밖으로 나가는 효과 | 이메일 발송, 브로커 주문 전송 |
-| **제외** | 이 World에 필요 없는 것 | |
-
-## Entity 판단 체크리스트 (교육용)
-
-어떤 개념이 Entity인지 헷갈리면 다음을 물어보세요. 모두 "예"일 필요는 없지만,
-"예"가 거의 없다면 Attribute · State · Role일 가능성이 큽니다.
-
-1. **고유한 정체성**이 있는가? (각각을 구별해서 가리킬 수 있는가 — "이 계약", "저 계약")
-2. **여러 단계에 걸쳐 지속**되는가?
-3. 시간이 지나며 **의미 있는 상태**를 갖는가?
-4. 다른 개념과 **중요한 관계**를 맺는가?
-5. **행동이 그것에 작용**하는가? (누군가 그것을 승인 · 서명 · 체결 · 채점한다)
-6. **정책이 그것을 가리키는가?** ("금액이 5,000을 넘는 요청은 …")
-
 ## 결정 기록
-
-최소 요건: 최종 **Entity 3개 이상**, Entity가 **아닌** 개념 **2개 이상** — 각각 이유 포함.
 
 | 후보 개념 | 최종 분류 | 이유 (체크리스트 중 무엇이 결정적이었나) |
 |---|---|---|
-| | | |
-| | | |
-| | | |
-| | | |
-| | | |
+| Hypothesis | **Entity** (owned_state) | 고유 identity, candidate→...→published까지 지속, 의미 있는 상태변화, qualify/support/reject/promote_insight/publish가 작용, Guard(정책)가 직접 가리키는 대상. 체크리스트 6개 전부 "예". |
+| Project | **Entity** (owned_state 없음) | client+period로 구분되는 고유 identity, Task 여러 개를 묶는 상위 컨텍스트로 지속. 다만 이 World 범위에서 Project 자체의 상태변화는 다루지 않음 (Transition/Guard 없음). |
+| Task | **Entity** (owned_state 없음) | K-Beauty 브랜드 고객사 사례(한 Project 안에 "남성유저 헤드룸" / "서브 브랜드 마케팅 전략" 2개 Task가 동시 존재)에서, Project 하나로는 Hypothesis들을 구분할 수 없다는 게 드러남. Hypothesis가 어느 질문에 귀속되는지 식별하려면 독립된 identity가 필요. |
+| Observation | **Entity** (owned_state 없음, 조건부 존재) | 고유 identity(metric+period+source), `Hypothesis.primary_evidence`로 실제 참조됨. 텍스트 속성으로 접지 않고 별도 Entity로 둔 이유 3가지: (1) 여러 Hypothesis가 같은 사실을 중복 타이핑 없이 공유 — 수치가 정정되면 한 곳만 고치면 됨 (예: H-001과 H-003이 같은 O-001을 공유), (2) Source of Truth(어느 출처·어느 기간에서 왔는지)를 추적 가능하게 함, (3) 관찰된 사실(fact)과 해석/주장(claim, =Hypothesis)을 구조적으로 분리. 단, "분석 중 스쳐간 모든 숫자"가 아니라 "Hypothesis가 실제로 인용했을 때만" World에 존재한다는 경계를 둬서 상태기계는 없음. |
+| Inquiry / Business Question | **제외** (Entity 아님) | 프로젝트당 0~2개로 빈도가 너무 낮고, 독립적인 lifecycle이나 "여러 객체가 구분해서 참조해야 할 필요"가 약함. Project/Task의 속성(ask_text)으로 충분히 흡수됨. |
+| BusinessProblem | **제외** (Entity 아님, Hypothesis로 흡수) | 한 커머스 클라이언트 프로젝트에서 "탐색형 쇼핑 참여가 무너지고 있다"는 문제를 발견한 사례에서, "핵심 문제를 발견한다"는 행위가 "가설을 제안하고 검증한다"는 행위와 본질적으로 다르지 않다는 걸 확인함. "GMV는 지켰어도 앱 인게이지먼트는 무너졌을 것이다"라는 Hypothesis가 SUPPORTED되면 그게 곧 핵심 문제 프레임이 됨 — 별도 Entity로 분리할 근거가 사라짐. |
+| InsightCandidate | **제외** (Entity 아님, Hypothesis의 published 상태로 흡수) | "Insight"는 Hypothesis와 다른 종류의 객체가 아니라, Hypothesis가 novelty/materiality/decision_relevance Guard까지 통과해서 `published`까지 올라간 것일 뿐. 여러 Hypothesis를 종합한 insight도 그 자체로 독립된 테스트 가능한 Hypothesis(`builds_on`으로 재료가 된 다른 Hypothesis를 가리킴)로 표현 가능해서, 별도 Entity가 필요 없어짐. |
+| Opportunity | **제외** (Entity 아님) | BusinessProblem과 같은 이유 — "기회 발견"도 결국 테스트 가능한 Hypothesis 제안/검증일 뿐이라 별도 분리 불필요. |
+| Analyst / Lead | **Role** (Entity 아님) | 행동하는 주체의 역할일 뿐, 고유하게 추적해야 하는 "것"이 아님. `principals`의 `roles`로 표현. |
+
+최종 **Entity 4개** (Project, Task, Observation, Hypothesis) / **Entity 아닌 개념 5개**
+(Inquiry, BusinessProblem, InsightCandidate, Opportunity, Analyst·Lead Role) — 최소 요건(3개/2개) 충족.
 
 ## 주인공 Entity
 
-상태기계를 갖는 Entity(`owned_state: true`) 하나를 고르세요. 이 World의 **Work** 입니다.
-
-- 주인공 Entity:
-- 왜 이것인가:
+- 주인공 Entity: **Hypothesis**
+- 왜 이것인가: 이 World의 Work(Business Insight Discovery)가 실제로 하는 일이 "가설을 만들고,
+  검증하고, 그중 고객에게 전달할 가치가 있는 것만 추려내는 것"이기 때문에, 모든 의미 있는
+  상태변화·Guard·권한 규칙이 Hypothesis 하나에 집중된다. 또한 `superwork.world/v1`의
+  states/transitions가 Entity별로 scoping되지 않는(전역 state 이름 집합을 쓰는) 구조라서,
+  owned_state Entity를 여러 개로 나누는 것은 검증되지 않은 리스크로 보고 Hypothesis 하나로
+  의도적으로 좁혔다 (자세한 이유는 modeling-decisions.md 결정 1 참고).

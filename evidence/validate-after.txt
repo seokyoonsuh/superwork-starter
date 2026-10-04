@@ -1,0 +1,24 @@
+
+> superwork-world-starter@0.1.0 summary
+> superwork validate --summary
+
+SUPERWORK WORLD SUMMARY
+
+World          business-insight-discovery
+Version        0.1.0
+Spec           superwork.world/v1
+
+Entities       4
+States         8
+Transitions    7
+Constraints    8
+
+Schema         PASS
+References     PASS
+Transitions    PASS
+Constraints    PASS
+
+Warnings       0
+
+READY FOR STUDIO IMPORT ✓
+

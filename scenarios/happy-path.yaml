@@ -1,16 +1,53 @@
-# 정상 시나리오 (RUN) — 여러분의 World로 바꾸세요.
-# 형식과 desk-check 방법: scenarios/README.md
+# 정상 시나리오 (RUN)
 # 판정은 예측(PREDICTION)입니다. 리뷰에서 강사가 실제 Runtime 결과와 비교합니다.
 scenario:
-  name: submit-happy-path
+  name: hypothesis-full-lifecycle-happy-path
   kind: happy-path
-  record: R-1001                  # seed.yaml의 레코드 — status: draft 가 시작 상태
+  record: H-001                     # seed.yaml — status: candidate 가 시작 상태
   steps:
-    - input: "Submit request R-1001."
-      as: alex
-      transition: submit
+    - input: "H-001을 qualify 한다 (relevant/testable/decision_value 충족)."
+      as: analyst1
+      transition: qualify
       expect: ALLOW
       because: >
-        State: R-1001 is draft = submit.from.
-        Role: alex has employee = submit.principal_role.
-        Guard C1_requester_only: principal.id (alex) == request.requester (alex) → true.
+        State: H-001 is candidate = qualify.from.
+        Role: analyst1 has analyst = qualify.principal_role.
+        Guards: relevant(yes)==yes, testable(yes)==yes, decision_value(yes)==yes → 모두 true.
+
+    - input: "H-001을 investigate 로 넘긴다."
+      as: analyst1
+      transition: investigate
+      expect: ALLOW
+      because: >
+        State: H-001 is qualified = investigate.from.
+        Role: analyst1 has analyst = investigate.principal_role.
+        Guards: 없음 → 통과.
+
+    - input: "근거(Observation) 2건을 인용한 뒤 H-001을 support 한다."
+      as: analyst1
+      transition: support
+      expect: ALLOW
+      because: >
+        State: H-001 is investigating = support.from.
+        Role: analyst1 has analyst = support.principal_role.
+        Guard C4_hyp_has_evidence: evidence_count(2) >= 1 → true.
+
+    - input: "novelty/materiality/decision_relevance가 모두 높아 insight로 승격을 시도한다."
+      as: analyst1
+      transition: promote_insight
+      expect: ALLOW
+      because: >
+        State: H-001 is supported = promote_insight.from.
+        Role: analyst1 has analyst = promote_insight.principal_role.
+        Guards: novelty(high) in [high,medium] → true.
+        materiality(high) in [high,medium] → true.
+        decision_relevance(high) == high → true.
+
+    - input: "lead1이 H-001을 최종 발행한다."
+      as: lead1
+      transition: publish
+      expect: ALLOW
+      because: >
+        State: H-001 is insight_ready = publish.from.
+        Role: lead1 has lead = publish.principal_role.
+        Guard C8_hyp_no_self_publish: principal.id(lead1) != proposed_by(analyst1) → true.

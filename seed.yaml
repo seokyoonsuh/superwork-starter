@@ -1,11 +1,59 @@
 # 시나리오의 시작 상태가 되는 샘플 레코드.
 # scenarios/*.yaml 의 `record:` 가 여기의 id를 가리키고, 그 레코드의 status가 시작 상태입니다.
-# 다른 시작 상태가 필요하면 레코드를 추가하세요 (status는 world.yaml에 선언된 state여야 합니다).
 # 리뷰에서 강사가 이 레코드로 여러분의 시나리오를 실제 Runtime에서 실행합니다.
+#
+# Observation은 owned_state가 없어 별도 seed 레코드가 필요 없습니다 (Transition의 대상이
+# 아님). 참고용으로 이 seed가 가리키는 Observation id가 무엇을 뜻하는지만 적어둡니다.
+#   O-001 = "고가치 신규고객 90일 전환율 -35%, 2026 Q3, Client CRM"
+#   O-002 = "구매자 수 YoY -15%, 2026 Q3, Client BI"
 records:
-  - type: Request
-    id: R-1001
-    status: draft
+  - type: Hypothesis
+    id: H-001
+    status: candidate
     attributes:
-      amount: 1200
-      requester: alex
+      task: T-001
+      builds_on: ""
+      statement: "고가치 신규고객의 90일 전환율 감소가 성장 둔화의 선행지표다"
+      proposed_by: analyst1
+      relevant: "yes"
+      testable: "yes"
+      decision_value: "yes"
+      primary_evidence: O-001
+      evidence_count: 2
+      novelty: "high"
+      materiality: "high"
+      decision_relevance: "high"
+
+  - type: Hypothesis
+    id: H-002
+    status: supported
+    attributes:
+      task: T-001
+      builds_on: ""
+      statement: "구매자 수가 줄어서 매출이 감소했다"
+      proposed_by: analyst1
+      relevant: "yes"
+      testable: "yes"
+      decision_value: "yes"
+      primary_evidence: O-002
+      evidence_count: 3
+      novelty: "low"
+      materiality: "high"
+      decision_relevance: "high"
+
+  - type: Hypothesis
+    id: H-003
+    status: insight_ready
+    attributes:
+      task: T-001
+      builds_on: "H-001"               # H-001(SUPPORTED)을 종합 재료로 삼은 insight
+      statement: "고가치 신규고객 acquisition quality 악화가 성장 병목이다"
+      proposed_by: analyst1
+      relevant: "yes"
+      testable: "yes"
+      decision_value: "yes"
+      primary_evidence: O-001          # H-001과 같은 Observation을 공유 — 중복 기록 없이 재참조
+      evidence_count: 3
+      novelty: "high"
+      materiality: "high"
+      decision_relevance: "high"

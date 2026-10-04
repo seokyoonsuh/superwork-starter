@@ -1,17 +1,19 @@
-# 공격 시나리오 (BREAK) — 여러분의 World가 막아야 하는 일을 "일어나게" 시도합니다.
-# 형식과 desk-check 방법: scenarios/README.md · 기록: assignment/break-fix.md
+# 공격 시나리오 (BREAK) — "참이지만 뻔한 주장"이 그대로 Insight로 승격되는 걸 막는지 시험.
 # 판정은 예측(PREDICTION)입니다. 리뷰에서 강사가 실제 Runtime 결과와 비교합니다.
 scenario:
-  name: submit-by-someone-else
+  name: obvious-hypothesis-should-not-become-insight
   kind: adversarial
-  record: R-1001
-  protects: "Only the requester can submit their own request."
+  record: H-002                     # seed.yaml — status: supported, novelty: low
+  protects: >
+    이미 검증된(SUPPORTED) 주장이라도, 고객이 이미 알고 있거나 너무 당연한 얘기(novelty=low)라면
+    고객에게 전달할 Insight(insight_ready)로 승격되면 안 된다.
   steps:
-    - input: "Submit request R-1001."
-      as: blake                   # 요청자가 아닌 다른 employee
-      transition: submit
-      expect: DENY                # 여러분의 예측 — 틀려도 괜찮습니다
+    - input: "H-002('구매자 수가 줄어서 매출이 감소했다', novelty=low)를 insight로 승격 시도한다."
+      as: analyst1
+      transition: promote_insight
+      expect: DENY                  # 예측 — 틀려도 괜찮음
       because: >
-        State: R-1001 is draft = submit.from.
-        Role: blake has employee = submit.principal_role.
-        Guard C1_requester_only: principal.id (blake) == request.requester (alex) → false → DENY.
+        State: H-002 is supported = promote_insight.from → 통과.
+        Role: analyst1 has analyst = promote_insight.principal_role → 통과.
+        Guard C5_hyp_novelty: novelty(low) in [high, medium] → false → DENY.
+        (materiality/decision_relevance는 충족하지만, 하나라도 실패하면 DENY.)
